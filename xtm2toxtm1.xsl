@@ -125,10 +125,8 @@
           <xsl:if test="key('reifies', @id)">
             <subjectIndicatorRef xlink:href="#{generate-id(key('reifies', @id))}"/>
           </xsl:if>
-          <!-- sids -->
-          <xsl:apply-templates select="xtm:subjectIdentifier"/>
-          <!-- slos -->
-          <xsl:apply-templates select="xtm:subjectLocator"/>
+          <!-- sids / slos -->
+          <xsl:apply-templates select="xtm:subjectIdentifier|xtm:subjectLocator"/>
         </subjectIdentity>
       </xsl:if>
       <xsl:apply-templates select="xtm:name"/>
