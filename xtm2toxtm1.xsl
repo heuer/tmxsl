@@ -36,7 +36,7 @@
 
   Note, that item identifiers are not translated and that XTM 1.0 supports
   only one subject locator. Further, the reification mechanism in XTM 1.0
-  and XTM 1.1 works differently from XTM 2.0.
+  and XTM 1.1 differs from TMDM/XTM 2.0.
   If a XTM 2.0 source contains item identifiers, reification or a topic
   has more than one subject locator, the result is not a one to one mapping.
   
@@ -95,8 +95,13 @@
   <xsl:key name="reifies" match="*[@reifier]" use="substring-after(@reifier, '#')"/>
 
   <xsl:template match="xtm:topicMap">
+    <!-- Check version for output -->
     <xsl:if test="$xtm_version != '1.0' and $xtm_version != '1.1'">
-      <xsl:message terminate="yes">Unsupported version. Expected '1.0' or '1.1'</xsl:message>
+      <xsl:message terminate="yes">Unsupported XTM version. Expected '1.0' or '1.1', got: <xsl:value-of select="$xtm_version"/></xsl:message>
+    </xsl:if>
+    <!-- Check version of the input -->
+    <xsl:if test="not(@version) or @version != '2.0'">
+      <xsl:message terminate="yes">Illegal input: Expected a topicMap version attribute with the value '2.0', got: <xsl:value-of select="@version"/></xsl:message>
     </xsl:if>
     <topicMap>
       <xsl:if test="not($omit_version) and $xtm_version = '1.1'">
@@ -104,6 +109,7 @@
       </xsl:if>
       <xsl:call-template name="reifier"/>
       <xsl:apply-templates/>
+      <xsl:call-template name="post-process-reification"/>
     </topicMap>
   </xsl:template>
 
@@ -148,9 +154,9 @@
   <xsl:template match="xtm:subjectLocator">
     <xsl:choose>
       <xsl:when test="position() != 1 and $xtm_version != '1.1'">
-        <xsl:comment>
-          <xsl:text>WARN: Omitting subject locator "</xsl:text><xsl:value-of select="@href"/><xsl:text>" </xsl:text>
-        </xsl:comment>
+        <xsl:variable name="msg" select="concat('WARN: Omitting subject locator: ', @href, ' ')"/>
+        <xsl:comment><xsl:value-of select="$msg"/></xsl:comment>
+        <xsl:message><xsl:value-of select="$msg"/></xsl:message>
       </xsl:when>
       <xsl:otherwise>
         <resourceRef xlink:href="{@href}"/>
@@ -251,6 +257,26 @@
     <xsl:if test="@reifier">
       <xsl:attribute name="id"><xsl:value-of select="generate-id(.)"/></xsl:attribute>
     </xsl:if>
+  </xsl:template>
+
+  <!-- 
+    Handles the reification of constructs where the referenced topic 
+    has no explicit <topic/> element like
+    
+    <topicMap version="2.0" 
+              reifier="#reifier"/>
+  -->
+  <xsl:template name="post-process-reification">
+    <xsl:for-each select="//*[@reifier]">
+      <xsl:variable name="reifier-id" select="substring-after(@reifier, '#')"/>
+      <xsl:if test="not(/xtm:topicMap/xtm:topic[@id = $reifier-id])">
+        <topic id="{$reifier-id}">
+          <subjectIdentity>
+            <subjectIndicatorRef xlink:href="#{generate-id()}"/>
+          </subjectIdentity>
+        </topic>
+      </xsl:if>
+    </xsl:for-each>
   </xsl:template>
 
 </xsl:stylesheet>
