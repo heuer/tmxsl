@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!-- 
   ========================================
   XTM 1.0 -> XTM 2.0 conversion stylesheet
@@ -128,6 +129,7 @@
     <xsl:if test="$xtm_version != '2.0'">
       <xsl:message terminate="yes">Unsupported version. Expected '2.0'</xsl:message>
     </xsl:if>
+    <xsl:comment>This XTM 2.0 representation was automatically generated from a XTM 1.0 source by http://topic-maps.googlecode.com/</xsl:comment>
     <topicMap version="{$xtm_version}">
       <xsl:apply-templates select="@id"/>
       <xsl:apply-templates/>

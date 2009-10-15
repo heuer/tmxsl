@@ -143,8 +143,8 @@
     <xsl:text>;&#xA;</xsl:text>
   </xsl:template>
 
-  <!-- subjectIdentity/topicRef -> itemIdentity -->
   <xsl:template match="xtm:subjectIdentity/xtm:topicRef">
+    <!--** subjectIdentity/topicRef -> itemIdentity -->
     <xsl:call-template name="indent"/>
     <xsl:text>^</xsl:text>
     <xsl:apply-templates select="@xlink:href"/>
@@ -314,10 +314,16 @@
   <xsl:template match="@id">
     <!--** Converts the XTM 1.0 reification mechanism into CTM / TMDM reification -->
     <xsl:if test="key('reifies', concat('#', .))">
-      <xsl:value-of select="concat(' ~ ', key('reifies', concat('#', .))/ancestor::xtm:topic/@id)"/>
+      <xsl:variable name="is-topicmap" select="parent::xtm:topicMap"/>
+      <!-- Add an additional whitespace if the parent is not a topicMap element .
+           Having this additional whitespace char wouldn't be a syntax failure, but it looks better without.
+      -->
+      <xsl:if test="not($is-topicmap)"><xsl:text> </xsl:text></xsl:if>
+      <xsl:value-of select="concat('~ ', key('reifies', concat('#', .))/ancestor::xtm:topic/@id)"/>
+      <!-- Add a newline character if the parent is a topicMap element, again for visual reasons -->
+      <xsl:if test="$is-topicmap"><xsl:text>&#xA;</xsl:text></xsl:if>
     </xsl:if>
   </xsl:template>
-
 
   <!--=== Name, occurrence, and variant value processing ====-->
 

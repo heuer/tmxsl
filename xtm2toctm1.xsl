@@ -129,13 +129,17 @@
   </xsl:template>
 
   <xsl:template match="xtm:association">
-    <!--** Matches associations -->
+    <!--** Matches associations Steps: -->
     <xsl:text>&#xA;</xsl:text>
+    <!--@ Process the association's type -->
     <xsl:apply-templates select="xtm:type"/>
     <xsl:text>(</xsl:text>
+    <!--@ Process the association's roles -->
     <xsl:apply-templates select="xtm:role"/>
     <xsl:text>)</xsl:text>
+    <!--@ Process the association's scope -->
     <xsl:apply-templates select="xtm:scope"/>
+    <!--@ Process the association's reifier -->
     <xsl:apply-templates select="@reifier"/>
     <xsl:text>&#xA;</xsl:text>
   </xsl:template>
@@ -171,6 +175,7 @@
   </xsl:template>
 
   <xsl:template match="xtm:scope">
+    <!--** Converts the scope -->
     <xsl:text> @</xsl:text>
     <xsl:for-each select="*">
       <xsl:apply-templates select="."/>

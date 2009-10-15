@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ==================================================
   XTM 2.0 -> XTM 1.0 / XTM 1.1 conversion stylesheet
@@ -88,7 +89,7 @@
 
   <xsl:strip-space elements="*"/>
 
-  <xsl:param name="xtm_version" select="1.0"/>
+  <xsl:param name="xtm_version" select="'1.0'"/>
   <xsl:param name="disallow_name_type" select="true()"/>
   <xsl:param name="omit_version" select="false()"/>
 
@@ -103,6 +104,7 @@
     <xsl:if test="not(@version) or @version != '2.0'">
       <xsl:message terminate="yes">Illegal input: Expected a topicMap version attribute with the value '2.0', got: <xsl:value-of select="@version"/></xsl:message>
     </xsl:if>
+    <xsl:comment>This XTM <xsl:value-of select="$xtm_version"/> representation was automatically generated from a XTM 2.0 source by http://topic-maps.googlecode.com/</xsl:comment>
     <topicMap>
       <xsl:if test="not($omit_version) and $xtm_version = '1.1'">
         <xsl:attribute name="version"><xsl:value-of select="$xtm_version"/></xsl:attribute>
