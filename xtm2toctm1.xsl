@@ -146,10 +146,16 @@
 
   <xsl:template match="xtm:role">
     <!--** Matches association roles -->
+    <xsl:if test="position() != 1">
+      <xsl:text>, </xsl:text>
+      <xsl:if test="position() >= 2">
+        <xsl:text>&#xA;</xsl:text>
+        <xsl:call-template name="indent"/>
+      </xsl:if>
+    </xsl:if>
     <xsl:apply-templates select="xtm:type"/>
     <xsl:apply-templates select="xtm:topicRef"/>
     <xsl:apply-templates select="@reifier"/>
-    <xsl:if test="position() != last()"><xsl:text>, </xsl:text></xsl:if>
   </xsl:template>
 
   <xsl:template match="xtm:variant">
