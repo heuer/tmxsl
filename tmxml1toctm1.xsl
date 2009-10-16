@@ -277,7 +277,7 @@
   </xsl:template>
 
   <xsl:template name="type">
-    <!--** Handles the type of a name / occurrence -->
+    <!--** Handles the type of a name / occurrence / role -->
     <xsl:value-of select="concat(name(), ': ')"/>
   </xsl:template>
 
