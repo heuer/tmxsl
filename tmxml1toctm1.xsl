@@ -169,8 +169,7 @@
                                       and @otherrole != 'iso:type'
                                       or not(@otherrole)
                                       or @reifier
-                                      or @scope
-                                      or child::*]">
+                                      or @scope]">
         <xsl:if test="position() = 1">
           <xsl:value-of select="concat('&#xA;# Associations played by ', $main-identity)"/>
         </xsl:if>
@@ -190,15 +189,15 @@
           </xsl:otherwise>
         </xsl:choose>
         <xsl:text>)</xsl:text>
-        <xsl:apply-templates name="@scope"/>
-        <xsl:apply-templates name="@reifier"/>
+        <xsl:apply-templates select="@scope"/>
+        <xsl:apply-templates select="@reifier"/>
         <xsl:text>&#xA;</xsl:text>
       </xsl:for-each>
     </xsl:for-each> <!-- /topic -->
   </xsl:template>
 
 
-  <!--=== Variant output ====-->
+  <!--=== Variant output ===-->
 
   <xsl:template match="tm:variant">
     <!--** Serializes a variant -->
@@ -213,7 +212,7 @@
   </xsl:template>
 
 
-  <!--=== Scope handling ====-->
+  <!--=== Scope handling ===-->
 
   <xsl:template match="@scope">
     <!--** Translates the TM/XML scope notation to CTM -->
@@ -225,7 +224,7 @@
   </xsl:template>
 
 
-  <!--=== Reifier handling ====-->
+  <!--=== Reifier handling ===-->
 
   <xsl:template match="@reifier">
     <!--** Translates the reifier to CTM -->
@@ -233,7 +232,7 @@
   </xsl:template>
 
 
-  <!--=== Text output ====-->
+  <!--=== Text output ===-->
 
   <xsl:template match="text()">
     <!--** Writes a string literal -->
@@ -246,7 +245,7 @@
   </xsl:template>
 
 
-  <!--=== Named templates ====-->
+  <!--=== Named templates ===-->
 
   <xsl:template name="handle-identities">
     <!--** Handles subject identifiers and subject locators -->
@@ -284,7 +283,7 @@
   <xsl:template name="handle-literal">
     <!--** Writes a CTM literal -->
     <xsl:choose>
-      <xsl:when test="not(@datatype)">
+      <xsl:when test="not(@datatype) or @datatype = 'http://www.w3.org/2001/XMLSchema#string'">
         <xsl:apply-templates select="text()"/>
       </xsl:when>
       <xsl:when test="@datatype = 'http://www.w3.org/2001/XMLSchema#anyURI'">

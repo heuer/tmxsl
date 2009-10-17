@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 
-  ========================================
-  XTM 1.0 -> XTM 2.0 conversion stylesheet
-  ========================================
+  ======================================
+  XTM 1.0 -> XTM 2 conversion stylesheet
+  ======================================
   
-  This stylesheet translates XTM 1.0 into XTM 2.0.
+  This stylesheet translates XTM 1.0 into XTM 2.
   
   Available parameters:
+  - xtm_version:
+    '2.0' (default) or '2.1'
   - omit_reification_identities: 
     true (default) or false
     If a subject identifier / item identifier pair is found that 
@@ -36,8 +38,9 @@
   original stylesheet found at <http://www.topiwriter.com/misc/xtm1toxtm2.html>.
   
   Changes against the original version:
+  - Support for XTM 2.1
   - Made "http://www.topicmaps.org/xtm/" to the default namespace and
-    therefor switched from <xsl:element name="..."/> to the concrete XTM 2.0
+    therefor switched from <xsl:element name="..."/> to the concrete XTM 2
     element
   - All types of the XTM 1.0 topics are taken into account
   - Made translation of the <mergeMap/> element optional
@@ -105,47 +108,59 @@
 
   <xsl:key name="reifiable" match="xtm:*[local-name() != 'topic']" use="concat('#', @id)"/>
 
-  <!-- copy and change the namespace from XTM 1.0 to XTM 2 -->
   <xsl:template match="xtm:*" >
+    <!--** Copy and change the namespace from XTM 1.0 to XTM 2 -->
     <xsl:element name="{local-name()}">
       <xsl:apply-templates select="@*"/>
       <xsl:apply-templates/>
     </xsl:element>
   </xsl:template>
 
-  <!-- rename xlink:href to href -->
   <xsl:template match="@xlink:href">
+    <!--** Rename xlink:href to href -->
     <xsl:attribute name="href"><xsl:value-of select="."/></xsl:attribute>
   </xsl:template>
 
-  <!-- Since XTM 2.0 knows only topicRef, 
-       translate subjectIndicatorRef and resourceRef into topicRef -->
-  <xsl:template match="xtm:subjectIndicatorRef|xtm:resourceRef[local-name(..) != 'occurrence'][local-name(..) != 'variantName']">
-    <topicRef href="#{generate-id(.)}"/>
+  <xsl:template match="xtm:subjectIndicatorRef">
+    <!--** Translates subjectIndicatorRef to XTM 2 -->
+    <xsl:choose>
+      <xsl:when test="$xtm_version = '2.0'"><topicRef href="#{generate-id(.)}"/></xsl:when>
+      <xsl:otherwise><subjectIdentifierRef href="{@xlink:href}"/></xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
-  <!-- topic map -->
+  <xsl:template match="xtm:resourceRef[local-name(..) != 'occurrence'][local-name(..) != 'variantName']">
+    <!--** Translates resourceRef to subject locator -->
+    <xsl:choose>
+      <xsl:when test="$xtm_version = '2.0'"><topicRef href="#{generate-id(.)}"/></xsl:when>
+      <xsl:otherwise><subjectLocatorRef href="{@xlink:href}"/></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+
   <xsl:template match="xtm:topicMap">
-    <xsl:if test="$xtm_version != '2.0'">
-      <xsl:message terminate="yes">Unsupported version. Expected '2.0'</xsl:message>
+    <!--** topic map -->
+    <xsl:if test="$xtm_version != '2.0' and $xtm_version != '2.1'">
+      <xsl:message terminate="yes">Unsupported XTM version. Expected '2.0' or '2.1'</xsl:message>
     </xsl:if>
-    <xsl:comment>This XTM 2.0 representation was automatically generated from a XTM 1.0 source by http://topic-maps.googlecode.com/</xsl:comment>
+    <xsl:comment>This XTM <xsl:value-of select="$xtm_version"/> representation was automatically generated from a XTM 1.0 source by http://topic-maps.googlecode.com/</xsl:comment>
     <topicMap version="{$xtm_version}">
       <xsl:apply-templates select="@id"/>
       <xsl:apply-templates/>
-      <xsl:call-template name="post-process"/>
+      <xsl:if test="$xtm_version = '2.0'">
+        <xsl:call-template name="post-process"/>
+      </xsl:if>
     </topicMap>
   </xsl:template>
 
-  <!-- mergeMap contains only a @href now-->
   <xsl:template match="xtm:mergeMap">
+    <!--** Translate mergeMap (if it should not be omitted) -->
     <xsl:if test="not($omit_mergemap)">
       <mergeMap href="{@xlink:href}"/>
     </xsl:if>
   </xsl:template>
 
-  <!--convert @id into itemIdentity iff construct != topic -->
   <xsl:template match="@id">
+    <!--** Convert @id into itemIdentity iff construct != topic -->
     <xsl:choose>
       <xsl:when test="key('reifies', concat('#', .))">
         <xsl:attribute name="reifier"><xsl:value-of select="concat('#', key('reifies', concat('#', .))/ancestor::xtm:topic/@id)"/></xsl:attribute>
@@ -159,30 +174,28 @@
     </xsl:choose>
   </xsl:template>
 
-  <!--instanceOf != topic/instanceOf -> type 
-      roleSpec -> type
-  -->
   <xsl:template match="xtm:instanceOf[not(parent::xtm:topic)]|xtm:roleSpec">
+    <!--** Translates the instanceOf element of constructs != topic to type and roleSpec to type -->
     <type>
       <xsl:apply-templates/>
     </type>
   </xsl:template>
 
-  <!--baseName -> name -->
   <xsl:template match="xtm:baseName">
+    <!-- baseName -> name -->
     <name>
       <xsl:apply-templates select="@id"/>
       <xsl:apply-templates/>
     </name>
   </xsl:template>
 
-  <!--baseNameString -> value -->
   <xsl:template match="xtm:baseNameString">
+    <!--** baseNameString -> value -->
     <value><xsl:value-of select="."/></value>
   </xsl:template>
 
-  <!-- variants -->
   <xsl:template match="xtm:variant">
+    <!--** variants -->
     <variant>
       <xsl:apply-templates select="@id"/>
       <xsl:apply-templates select="*[local-name() != 'variant']"/>
@@ -190,8 +203,8 @@
     <xsl:apply-templates select="xtm:variant"/>
   </xsl:template>
 
-  <!--parameters -> scope -->
   <xsl:template match="xtm:parameters">
+    <!--**  parameters -> scope (takes all parameters of the ancestor variants (if any) into account) -->
     <scope>
       <xsl:apply-templates/>
       <!-- add the scope of the parent variants -->
@@ -199,18 +212,18 @@
     </scope>
   </xsl:template>
 
-  <!--variantName -> :nil -->
   <xsl:template match="xtm:variantName">
+    <!--** Ignores the variantName element and processes the children of this element -->
     <xsl:apply-templates/>
   </xsl:template>
 
-  <!--subjectIdentity -> :nil -->
   <xsl:template match="xtm:subjectIdentity">
+    <!--** Ignores the subjectIdentity element and processes the children of this element -->
     <xsl:apply-templates/>
   </xsl:template>
 
-  <!-- occurrences -->
   <xsl:template match="xtm:occurrence">
+    <!--** Occurrences -->
     <occurrence>
       <xsl:apply-templates select="@id"/>
       <xsl:if test="count(xtm:instanceOf) = 0">
@@ -220,8 +233,8 @@
     </occurrence>
   </xsl:template>
 
-  <!-- associations -->
   <xsl:template match="xtm:association">
+    <!--** Associations -->
     <association>
       <xsl:apply-templates select="@id"/>
       <xsl:if test="count(xtm:instanceOf) = 0">
@@ -231,12 +244,13 @@
     </association>
   </xsl:template>
 
-  <!-- roles -->
   <xsl:template match="xtm:member">
-    <!-- Multiple players cause multiple roles -->
+    <!--** Matches association roles. Steps: -->
+    <!--@ If the role has multiple players, create a role for each of these players -->
     <xsl:for-each select="xtm:topicRef|xtm:resourceRef|xtm:subjectIndicatorRef">
       <role>
         <xsl:choose>
+          <!--@ If the role has no type, use a default type -->
           <xsl:when test="count(../xtm:roleSpec) = 0">
             <!-- This may cause an error if a XTM 2.0 parser checks if the 
                  <topicRef/> contains a fragment identifier 
@@ -244,6 +258,7 @@
             -->
             <type><topicRef href="http://psi.semagia.com/xtm/1.0/role"/></type>
           </xsl:when>
+          <!--@ Use the role's type if specified -->
           <xsl:otherwise>
             <xsl:apply-templates select="../xtm:roleSpec"/>
           </xsl:otherwise>
@@ -253,8 +268,8 @@
     </xsl:for-each>
   </xsl:template>
 
-  <!-- subjectIdentity/subjectIndicatorRef -> subjectIdentifier -->
   <xsl:template match="xtm:subjectIdentity/xtm:subjectIndicatorRef">
+    <!--** subjectIdentity/subjectIndicatorRef -> subjectIdentifier -->
     <xsl:if test="not($omit_reification_identities and key('reifiable', @xlink:href))">
       <subjectIdentifier>
         <!-- renaming some of the association types and role types-->
@@ -288,18 +303,18 @@
     </xsl:if>
   </xsl:template>
 
-  <!-- subjectIdentity/resourceRef -> subjectLocator -->
   <xsl:template match="xtm:subjectIdentity/xtm:resourceRef">
+    <!--** subjectIdentity/resourceRef -> subjectLocator -->
     <subjectLocator href="{@xlink:href}"/>
   </xsl:template>
 
-  <!-- subjectIdentity/topicRef -> itemIdentity -->
   <xsl:template match="xtm:subjectIdentity/xtm:topicRef">
+    <!--** subjectIdentity/topicRef -> itemIdentity -->
     <itemIdentity href="{@xlink:href}"/>
   </xsl:template>
 
-  <!-- topics -->
   <xsl:template match="xtm:topic">
+    <!--** Topics -->
     <topic id="{@id}">
       <xsl:apply-templates select="xtm:subjectIdentity"/>
       <xsl:if test="count(xtm:instanceOf) != 0">
@@ -314,17 +329,18 @@
     </topic>
   </xsl:template>
 
-  <!-- Since XTM 2.0 knows only topicRef to reference topics, the information if
-       a topic is referenced by a subject identifier / subject locator is lost.
-       This template adds the information back -->
   <xsl:template name="post-process">
-    <!-- sids -->
+    <!--** Since XTM 2.0 knows only topicRef to reference topics, the information if
+           a topic is referenced by a subject identifier / subject locator is lost.
+           This template adds the information back. Steps: 
+    -->
+    <!--@ Process subject identifiers -->
     <xsl:for-each select="xtm:association/xtm:member/xtm:subjectIndicatorRef|xtm:association/xtm:member/xtm:roleSpec/xtm:subjectIndicatorRef|//xtm:instanceOf/xtm:subjectIndicatorRef|//xtm:scope/xtm:subjectIndicatorRef|//xtm:parameters/xtm:subjectIndicatorRef">
       <topic id="{generate-id(.)}">
         <subjectIdentifier href="{@xlink:href}"/>
       </topic>
     </xsl:for-each>
-    <!-- role players / themes which are referenced by their subject locator -->
+    <!--@ Process role players / themes which are referenced by their subject locator -->
     <xsl:for-each select="xtm:association/xtm:member/xtm:resourceRef|//xtm:scope/xtm:resourceRef">
       <topic id="{generate-id(.)}">
         <subjectLocator href="{@xlink:href}"/>

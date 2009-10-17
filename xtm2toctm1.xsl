@@ -59,11 +59,11 @@
   <xsl:template match="xtm:topicMap">
     <!--** Matches the xtm:topicMap element Steps: -->
     <!--@ Validate the version attribute of the topicMap -->
-    <xsl:if test="not(@version) or @version != '2.0'">
+    <xsl:if test="not(@version) or (@version != '2.0' and @version != '2.1')">
       <xsl:message terminate="yes">Illegal input: Expected a topicMap version attribute with the value '2.0', got: <xsl:value-of select="@version"/></xsl:message>
     </xsl:if>
     <xsl:text>%encoding "utf-8"&#xA;%version 1.0&#xA;</xsl:text>
-    <xsl:text>&#xA;# This CTM 1.0 representation was automatically generated from a XTM 2.0 source by&#xA;# http://topic-maps.googlecode.com/&#xA;</xsl:text>
+    <xsl:value-of select="concat('&#xA;# This CTM 1.0 representation was automatically generated from a XTM ', @version ,' source by&#xA;# http://topic-maps.googlecode.com/&#xA;')"/>
     <xsl:call-template name="tm-reifier"/>
     <!--@ Processes the topics -->
     <xsl:apply-templates select="xtm:topic"/>
@@ -172,12 +172,22 @@
 
   <xsl:template match="xtm:type">
     <!--** Matches the type element -->
-    <xsl:apply-templates select="xtm:topicRef"/>
+    <xsl:apply-templates select="*"/>
     <xsl:if test="not(parent::xtm:association)"><xsl:text>: </xsl:text></xsl:if>
   </xsl:template>
 
   <xsl:template match="xtm:topicRef">
     <xsl:apply-templates select="@href"/>
+  </xsl:template>
+
+  <xsl:template match="xtm:subjectIdentifierRef">
+    <!--** Translates XTM 2.1 subjectIdentifierRef into the CTM subject identifier notation -->
+    <xsl:value-of select="concat('&lt;', @href, '&gt;')"/>
+  </xsl:template>
+
+  <xsl:template match="xtm:subjectLocatorRef">
+    <!--** Translates XTM 2.1 subjectLocatorRef into the CTM subject locator notation -->
+    <xsl:value-of select="concat('= &lt;', @href, '&gt;')"/>
   </xsl:template>
 
   <xsl:template match="xtm:scope">
@@ -199,7 +209,7 @@
   </xsl:template>
 
 
-  <!--=== Reification handling ====-->
+  <!--=== Reification handling ===-->
 
   <xsl:template match="@reifier">
     <!--** Matches all reifier attributes which are not an attribute of the xtm:topicMap element -->
@@ -219,7 +229,7 @@
   </xsl:template>
 
 
-  <!--=== Name, occurrence, and variant value processing ====-->
+  <!--=== Name, occurrence, and variant value processing ===-->
 
   <xsl:template match="xtm:value">
     <!--** Matches the value of topic names -->
@@ -248,7 +258,7 @@
   </xsl:template>
 
   
-  <!--=== Text output ====-->
+  <!--=== Text output ===-->
 
   <xsl:template match="text()">
     <xsl:variable name="triple-quotes" select="contains(., '&quot;')"/>
@@ -260,7 +270,7 @@
   </xsl:template>
 
   
-  <!--=== Named templates ====-->
+  <!--=== Named templates ===-->
 
   <xsl:template name="indent">
     <!--** Writes an identation string (default: 4 whitespaces) -->

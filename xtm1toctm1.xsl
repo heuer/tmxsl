@@ -175,7 +175,7 @@
       </xsl:otherwise>
     </xsl:choose>
     <!--@ Process the value of the occurrence -->
-    <xsl:apply-templates select="xtm:resourceRef|xtm:resourceData|xtm:baseNameString"/>
+    <xsl:apply-templates select="xtm:resourceRef|xtm:resourceData"/>
     <!--@ Process the scope of the occurrence -->
     <xsl:apply-templates select="xtm:scope"/>
     <!--@ Process the reifier of the occurrence -->
@@ -228,7 +228,7 @@
 
   <xsl:template match="xtm:member">
     <!--** Matches association roles. Steps: -->
-    <!--@ If the role has multiple players, convert create a role for each of these players -->
+    <!--@ If the role has multiple players, create a role for each of these players -->
     <xsl:for-each select="xtm:topicRef|xtm:resourceRef|xtm:subjectIndicatorRef">
       <xsl:choose>
         <!--@ If the role has no type, use a default type -->
@@ -280,7 +280,7 @@
   </xsl:template>
 
 
-  <!--=== Scope handling ====-->
+  <!--=== Scope handling ===-->
 
   <xsl:template match="xtm:scope">
     <!--** Converts the scope -->
@@ -309,7 +309,7 @@
   </xsl:template>
 
 
-  <!--=== Reification handling ====-->
+  <!--=== Reification handling ===-->
 
   <xsl:template match="@id">
     <!--** Converts the XTM 1.0 reification mechanism into CTM / TMDM reification -->
@@ -325,7 +325,7 @@
     </xsl:if>
   </xsl:template>
 
-  <!--=== Name, occurrence, and variant value processing ====-->
+  <!--=== Name, occurrence, and variant value processing ===-->
 
   <xsl:template match="xtm:baseNameString">
     <!--** Matches the value of topic names -->
@@ -346,7 +346,7 @@
   </xsl:template>
 
   
-  <!--=== Text output ====-->
+  <!--=== Text output ===-->
 
   <xsl:template match="text()">
     <xsl:variable name="triple-quotes" select="contains(., '&quot;')"/>
@@ -358,7 +358,7 @@
   </xsl:template>
 
   
-  <!--=== Named templates ====-->
+  <!--=== Named templates ===-->
 
   <xsl:template name="indent">
     <!--** Writes an identation string (default: 4 whitespaces) -->
