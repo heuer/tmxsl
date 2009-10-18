@@ -28,8 +28,7 @@
     false (default) or true
     If the ``xtm_version`` is set to '1.1', the <topicMap/> 
     element gets a ``version`` attribute with the value "1.1". 
-    That attribute can be omitted if this parameter is set to 
-    ``true``.
+    That attribute can be omitted if this parameter is set to ``true``.
     Note: Omitting the version attribute makes the XTM 1.1 output 
     invalid since the draft mandates the version attribute.
     The value of this parameter has no meaning if the ``xtm_version`` is 
@@ -213,7 +212,7 @@
   <xsl:template match="xtm:type">
     <xsl:choose>
       <xsl:when test="parent::xtm:name and $xtm_version = '1.0' and $disallow_name_type">
-        <xsl:variable name="msg" select="concat('WARN: Skipping the type declaration: ', xtm:topicRef/@href, ' ')"/>
+        <xsl:variable name="msg" select="concat('WARN: Skipping the name type declaration: ', xtm:topicRef/@href, ' ')"/>
         <xsl:comment><xsl:value-of select="$msg"/></xsl:comment>
         <xsl:message><xsl:value-of select="$msg"/></xsl:message>
       </xsl:when>

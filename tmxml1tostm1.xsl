@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   ===========================================
-  TM/XML 1.0 -> CTM 1.0 conversion stylesheet
+  TM/XML 1.0 -> STM 1.0 conversion stylesheet
   ===========================================
   
-  This stylesheet translates TM/XML 1.0 into Compact Topic Maps Notation
-  (CTM) 1.0.
+  This stylesheet translates TM/XML 1.0 into Snello Topic Maps (STM) 1.0.
 
   Available parameters:
   - indentation: 
@@ -13,7 +12,7 @@
     By default, this is set to 4 whitespaces ('    ').
 
   TM/XML: <http://www.ontopia.net/topicmaps/tmxml.html>
-  CTM 1.0: <http://www.isotopicmaps.org/ctm/>
+  STM 1.0: <http://www.semagia.com/tr/snello/1.0/>
 
 
 
@@ -51,11 +50,9 @@
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:tm="http://psi.ontopia.net/xml/tm-xml/"
-                xmlns:iso="http://psi.topicmaps.org/iso13250/model/"
-                xmlns:str="http://exslt.org/strings"
-                extension-element-prefixes="str">
+                xmlns:iso="http://psi.topicmaps.org/iso13250/model/">
 
-  <xsl:output method="text" media-type="application/x-tm+ctm" encoding="utf-8"/>
+  <xsl:output method="text" media-type="application/x-tm+stm" encoding="utf-8"/>
 
   <xsl:strip-space elements="*"/>
 
@@ -63,9 +60,9 @@
 
   <xsl:template match="/*">
     <!--** Walks through the TM/XML source. Steps: -->
-    <xsl:text>%encoding "utf-8"&#xA;%version 1.0&#xA;</xsl:text>
-    <xsl:text>&#xA;# This CTM 1.0 representation was automatically generated from a TM/XML 1.0 source by&#xA;# http://topic-maps.googlecode.com/&#xA;</xsl:text>
-    <!--@ Convert the XML namespaces into CTM prefix bindings -->
+    <xsl:text>%encoding "utf-8"&#xA;%stm 1.0&#xA;</xsl:text>
+    <xsl:text>&#xA;# This STM 1.0 representation was automatically generated from a TM/XML 1.0 source by&#xA;# http://topic-maps.googlecode.com/&#xA;</xsl:text>
+    <!--@ Convert the XML namespaces into STM prefix bindings -->
     <xsl:for-each select="namespace::*[. != 'http://www.w3.org/XML/1998/namespace']">
       <xsl:sort select="local-name()"/>
       <xsl:value-of select="concat('&#xA;%prefix ', local-name(), ' ', '&lt;', ., '&gt;')"/>
@@ -111,7 +108,7 @@
       <!--@ Translate the 'main' topic type into an 'isa' statement unless the main topic type is 'topic' -->
       <xsl:if test="not(namespace-uri() = 'http://psi.ontopia.net/xml/tm-xml/' and local-name() = 'topic')">
         <xsl:call-template name="indent"/>
-        <xsl:value-of select="concat('isa ', name(), ';&#xA;')"/>
+        <xsl:value-of select="concat('isa ', name(), '&#xA;')"/>
       </xsl:if>
       <!--@ Translate all binary type-instance associations which are not 
             reified and which are in the unconstrainted scope into 'isa' statements.
@@ -124,23 +121,31 @@
                                              [not(@reifier)]
                                              [not(@scope)]">
         <xsl:call-template name="indent"/>
-        <xsl:value-of select="concat('isa ', @topicref, ';&#xA;')"/>
+        <xsl:value-of select="concat('isa ', @topicref, '&#xA;')"/>
       </xsl:for-each>
 
       <!--@ Process the topic names -->
       <xsl:for-each select="*[tm:value]">
         <xsl:call-template name="indent"/>
-        <xsl:text>- </xsl:text>
+        <xsl:text>-</xsl:text>
         <!--@ Serialize the name type iff it is not the default name type -->
         <xsl:if test="namespace-uri() != 'http://psi.topicmaps.org/iso13250/model/' and local-name() != 'topic-name'">
-          <xsl:call-template name="type"/>
+          <xsl:value-of select="concat(' ', name())"/>
         </xsl:if>
-        <xsl:apply-templates select="tm:value/text()"/>
         <xsl:apply-templates select="@scope"/>
+        <xsl:choose>
+          <!-- Omit the colon if the name's type is the default type and the name is in the unconstrained scope -->
+          <xsl:when test="@scope or namespace-uri() != 'http://psi.topicmaps.org/iso13250/model/' and local-name() != 'topic-name'">
+            <xsl:text>: </xsl:text>
+          </xsl:when>
+          <xsl:otherwise><xsl:text> </xsl:text></xsl:otherwise>
+        </xsl:choose>
+        <xsl:apply-templates select="tm:value/text()"/>
         <xsl:apply-templates select="@reifier"/>
-        <!--@ Process the variants -->
-        <xsl:apply-templates select="tm:variant"/>
-        <xsl:text>;&#xA;</xsl:text>
+        <xsl:if test="tm:variant">
+          <xsl:text> # Variants are not supported by STM</xsl:text>
+        </xsl:if>
+        <xsl:text>&#xA;</xsl:text>
       </xsl:for-each>
 
       <!--@ Process the occurrences -->
@@ -149,15 +154,16 @@
                                   and (local-name() = 'identifier' or local-name() = 'locator'))]
                              [not(@role)]">
         <xsl:call-template name="indent"/>
-        <xsl:call-template name="type"/>
-        <xsl:call-template name="handle-literal"/>
+        <xsl:value-of select="name()"/>
         <xsl:apply-templates select="@scope"/>
+        <xsl:text>: </xsl:text>
+        <xsl:call-template name="handle-literal"/>
         <xsl:apply-templates select="@reifier"/>
-        <xsl:text>;&#xA;</xsl:text>
+        <xsl:text>&#xA;</xsl:text>
       </xsl:for-each>
       
       <!-- End of topic block -->
-      <xsl:text>.&#xA;</xsl:text>
+      <xsl:text>&#xA;</xsl:text>
 
       <!--** Translate those associations played by the current topic 
              which do not model type-instance relationships which are not reified 
@@ -173,7 +179,9 @@
         <xsl:if test="position() = 1">
           <xsl:value-of select="concat('&#xA;# Associations played by ', $main-identity)"/>
         </xsl:if>
-        <xsl:value-of select="concat('&#xA;', name(), '(', @role, ': ', $main-identity)"/>
+        <xsl:value-of select="concat('&#xA;', name())"/>
+        <xsl:apply-templates select="@scope"/>
+        <xsl:value-of select="concat('(', @role, ': ', $main-identity)"/>
         <xsl:choose>
           <!-- binary association or n-ary association -->
           <xsl:when test="@topicref"> <!-- binary association -->
@@ -183,13 +191,11 @@
             <xsl:for-each select="*">
               <xsl:text>,&#xA;</xsl:text>
               <xsl:call-template name="indent"/>
-              <xsl:call-template name="type"/>
-              <xsl:value-of select="@topicref"/>
+              <xsl:value-of select="concat(name(), ': ', @topicref)"/>
             </xsl:for-each> <!-- /roles -->
           </xsl:otherwise>
         </xsl:choose>
         <xsl:text>)</xsl:text>
-        <xsl:apply-templates select="@scope"/>
         <xsl:apply-templates select="@reifier"/>
         <xsl:text>&#xA;</xsl:text>
       </xsl:for-each>
@@ -197,37 +203,19 @@
   </xsl:template>
 
 
-  <!--=== Variant output ===-->
-
-  <xsl:template match="tm:variant">
-    <!--** Serializes a variant -->
-    <xsl:text>&#xA;</xsl:text>
-    <xsl:call-template name="indent"/>
-    <xsl:call-template name="indent"/>
-    <xsl:text>(</xsl:text>
-    <xsl:call-template name="handle-literal"/>
-    <xsl:apply-templates select="@scope"/>
-    <xsl:apply-templates select="@reifier"/>
-    <xsl:text>)</xsl:text>
-  </xsl:template>
-
-
   <!--=== Scope handling ===-->
 
   <xsl:template match="@scope">
-    <!--** Translates the TM/XML scope notation to CTM -->
-    <xsl:text> @</xsl:text>
-    <xsl:for-each select="str:split(.)">
-      <xsl:value-of select="."/>
-      <xsl:if test="position() != last()"><xsl:text>, </xsl:text></xsl:if>
-    </xsl:for-each>
+    <!--** Translates the TM/XML scope notation to STM -->
+    <!-- Add a whitespace character iff this is not the scope of an association -->
+    <xsl:if test="not(../@role)"><xsl:text> </xsl:text></xsl:if>
+    <xsl:value-of select="concat('@', .)"/>
   </xsl:template>
-
 
   <!--=== Reifier handling ===-->
 
   <xsl:template match="@reifier">
-    <!--** Translates the reifier to CTM -->
+    <!--** Translates the reifier to STM -->
     <xsl:value-of select="concat(' ~ ', .)"/>
   </xsl:template>
 
@@ -262,7 +250,7 @@
             <xsl:with-param name="loc" select="."/>
             <xsl:with-param name="prefix" select="$prefix"/>
           </xsl:call-template>
-          <xsl:text>;&#xA;</xsl:text>
+          <xsl:text>&#xA;</xsl:text>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:for-each>
@@ -281,7 +269,7 @@
   </xsl:template>
 
   <xsl:template name="handle-literal">
-    <!--** Writes a CTM literal -->
+    <!--** Writes a STM literal -->
     <xsl:choose>
       <xsl:when test="not(@datatype) or @datatype = 'http://www.w3.org/2001/XMLSchema#string'">
         <xsl:apply-templates select="text()"/>
@@ -306,7 +294,7 @@
   </xsl:template>
 
   <xsl:template name="indent">
-    <!--** Writes an identation string (default: 4 whitespaces) -->
+    <!--** Writes an identation string -->
     <xsl:value-of select="$indentation"/>
   </xsl:template>
 
