@@ -1,9 +1,9 @@
 <!--
-  ========================================
-  XTM 2.0 -> JTM 1.0 conversion stylesheet
-  ========================================
+  ======================================
+  XTM 2 -> JTM 1.0 conversion stylesheet
+  ======================================
   
-  This stylesheet translates XTM 2.0 into JSON Topic Maps (JTM) 1.0.
+  This stylesheet translates XTM 2 into JSON Topic Maps (JTM) 1.0.
 
   XTM 2.0: <http://www.isotopicmaps.org/sam/sam-xtm/2006-06-19/>
   JTM 1.0: <http://www.cerny-online.com/jtm/>
@@ -168,10 +168,30 @@
     <xsl:if test="position() != last()"><xsl:text>,</xsl:text></xsl:if>
   </xsl:template>
 
+  <xsl:template match="xtm:subjectIdentifierRef">
+    <xsl:if test="parent::xtm:role">
+      <xsl:text>,"player":</xsl:text>
+    </xsl:if>
+    <xsl:call-template name="string">
+      <xsl:with-param name="s" select="concat('si:', @href)"/>
+    </xsl:call-template>
+    <xsl:if test="position() != last()"><xsl:text>,</xsl:text></xsl:if>
+  </xsl:template>
+
+  <xsl:template match="xtm:subjectLocatorRef">
+    <xsl:if test="parent::xtm:role">
+      <xsl:text>,"player":</xsl:text>
+    </xsl:if>
+    <xsl:call-template name="string">
+      <xsl:with-param name="s" select="concat('sl:', @href)"/>
+    </xsl:call-template>
+    <xsl:if test="position() != last()"><xsl:text>,</xsl:text></xsl:if>
+  </xsl:template>
+
   <xsl:template match="xtm:value|xtm:type|xtm:scope">
     <xsl:value-of select="concat(',&quot;', local-name(.), '&quot;:')"/>
     <xsl:if test="local-name(.) = 'scope'">[</xsl:if>
-    <xsl:apply-templates select="xtm:topicRef|text()"/>
+    <xsl:apply-templates select="xtm:topicRef|xtm:subjectIdentifierRef|xtm:subjectLocatorRef|text()"/>
     <xsl:if test="local-name(.) = 'scope'">]</xsl:if>
   </xsl:template>
 
@@ -202,8 +222,10 @@
     <xsl:apply-templates select="text()"/>
   </xsl:template>
   
-  <!-- reification -->
   <xsl:template name="reifier">
+    <!--** Writes reifier reference (maybe 'null') to the output.
+           All constructs in the output start with the reifier property to have common structure
+           to write further properties of the constructs. -->
     <xsl:text>"reifier":</xsl:text>
     <xsl:choose>
       <xsl:when test="@reifier">

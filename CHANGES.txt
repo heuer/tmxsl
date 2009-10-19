@@ -2,3 +2,6 @@
 Change log
 ==========
 
+2009-10-xx
+----------
+- Initial release
