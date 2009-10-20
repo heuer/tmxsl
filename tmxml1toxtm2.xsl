@@ -62,7 +62,7 @@
                 extension-element-prefixes="str"
                 exclude-result-prefixes="tm iso">
 
-  <xsl:output method="xml" media-type="application/x-tm+xtm" encoding="utf-8" standalone="yes" indent="yes"/>
+  <xsl:output method="xml" media-type="application/x-tm+xtm" encoding="utf-8" standalone="yes"/>
 
   <xsl:strip-space elements="*"/>
 
