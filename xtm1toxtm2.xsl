@@ -129,7 +129,9 @@
     </xsl:choose>
   </xsl:template>
 
-  <xsl:template match="xtm:resourceRef[local-name(..) != 'occurrence'][local-name(..) != 'variantName']">
+  <xsl:template match="xtm:resourceRef[local-name(..) != 'occurrence']
+                                      [local-name(..) != 'variantName']
+                                      [local-name(..) != 'subjectIdentity']">
     <!--** Translates resourceRef to subject locator -->
     <xsl:choose>
       <xsl:when test="$xtm_version = '2.0'"><topicRef href="#{generate-id(.)}"/></xsl:when>
@@ -268,7 +270,7 @@
     </xsl:for-each>
   </xsl:template>
 
-  <xsl:template match="xtm:subjectIdentity/xtm:subjectIndicatorRef">
+  <xsl:template match="xtm:subjectIdentity/xtm:subjectIndicatorRef" mode="topic">
     <!--** subjectIdentity/subjectIndicatorRef -> subjectIdentifier -->
     <xsl:if test="not($omit_reification_identities and key('reifiable', @xlink:href))">
       <subjectIdentifier>

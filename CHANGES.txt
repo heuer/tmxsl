@@ -2,6 +2,12 @@
 Change log
 ==========
 
+2009-xx-yy
+----------
+- XTM 1.0 -> XTM 2.x: Fixed issue #3 (ambiguous rule match)
+  reported by Patrick Durusau
+
+
 2009-10-19
 ----------
 - XTM 1.0 -> CTM 1.0
