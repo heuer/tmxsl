@@ -270,7 +270,7 @@
     </xsl:for-each>
   </xsl:template>
 
-  <xsl:template match="xtm:subjectIdentity/xtm:subjectIndicatorRef" mode="topic">
+  <xsl:template match="xtm:subjectIdentity/xtm:subjectIndicatorRef">
     <!--** subjectIdentity/subjectIndicatorRef -> subjectIdentifier -->
     <xsl:if test="not($omit_reification_identities and key('reifiable', @xlink:href))">
       <subjectIdentifier>
