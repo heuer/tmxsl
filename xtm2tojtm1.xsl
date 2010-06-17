@@ -45,7 +45,8 @@
                 xmlns:xtm="http://www.topicmaps.org/xtm/"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-  <xsl:output method="text" media-type="application/x-tm+jtm" encoding="utf-8"/>
+  <xsl:output method="text" media-type="application/x-tm+jtm" encoding="utf-8"
+              omit-xml-declaration="yes"/>
 
   <xsl:strip-space elements="*"/>
 
@@ -72,13 +73,24 @@
       <xsl:when test="position() = 1">,"topics":[</xsl:when>
       <xsl:otherwise>,</xsl:otherwise>
     </xsl:choose>
-    <xsl:text>{"item_identifiers":["</xsl:text>
-    <xsl:value-of select="concat('#', @id)"/>
-    <xsl:text>"</xsl:text>
-    <xsl:for-each select="xtm:itemIdentity">
-      <xsl:text>,</xsl:text>
-      <xsl:apply-templates select="@href" mode="iri"/>
-    </xsl:for-each>
+    <xsl:text>{"item_identifiers":[</xsl:text>
+    <xsl:choose>
+        <xsl:when test="@id">
+            <xsl:text>"</xsl:text>
+            <xsl:value-of select="concat('#', @id)"/>
+            <xsl:text>"</xsl:text>
+            <xsl:for-each select="xtm:itemIdentity">
+                <xsl:text>,</xsl:text>
+                <xsl:apply-templates select="@href" mode="iri"/>
+            </xsl:for-each>
+        </xsl:when>
+        <xsl:otherwise>
+            <xsl:for-each select="xtm:itemIdentity">
+                <xsl:if test="position() != 1"><xsl:text>,</xsl:text></xsl:if>
+                <xsl:apply-templates select="@href" mode="iri"/>
+            </xsl:for-each>
+        </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>]</xsl:text>
     <xsl:apply-templates select="xtm:subjectIdentifier"/>
     <xsl:apply-templates select="xtm:subjectLocator"/>
@@ -100,7 +112,7 @@
     <xsl:if test="position() != last()">,</xsl:if>
   </xsl:template>
 
-  <!-- iid != topic iids -->
+  <!-- iids != topic iids -->
   <xsl:template match="xtm:itemIdentity">
     <xsl:if test="position() = 1">,"item_identifiers":</xsl:if>
     <xsl:text>[</xsl:text>
@@ -199,7 +211,7 @@
   <xsl:template match="xtm:resourceRef|xtm:resourceData[@datatype = 'http://www.w3.org/2001/XMLSchema#anyURI']">
     <xsl:text>,"datatype": "http://www.w3.org/2001/XMLSchema#anyURI","value":</xsl:text>
     <xsl:call-template name="string">
-      <xsl:with-param name="s" select="@href|."/>
+      <xsl:with-param name="s" select="@href|text()"/>
     </xsl:call-template>
   </xsl:template>
 
