@@ -165,7 +165,7 @@
     <xsl:apply-templates select="xtm:itemIdentity"/> 
     <xsl:apply-templates select="xtm:type"/>
     <xsl:apply-templates select="xtm:scope"/>
-    <xsl:apply-templates select="xtm:value|xtm:resourceRef|xtm:resourceData|xtm:topicRef"/>
+    <xsl:apply-templates select="xtm:value|xtm:resourceRef|xtm:resourceData|xtm:topicRef|xtm:subjectIdentifierRef|xtm:subjectLocatorRef"/>
     <xsl:apply-templates select="xtm:role|xtm:variant"/>
     <xsl:text>}</xsl:text>
     <xsl:if test="position() != last()">,</xsl:if>
