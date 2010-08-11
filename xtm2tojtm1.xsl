@@ -61,7 +61,7 @@
         <xsl:when test="count(xtm:association) = 0">,"associations":[</xsl:when>
         <xsl:otherwise>,</xsl:otherwise>
       </xsl:choose>
-      <xsl:apply-templates select="xtm:topic/xtm:instanceOf/xtm:topicRef"/>
+      <xsl:apply-templates select="xtm:topic/xtm:instanceOf"/>
     </xsl:if>
     <xsl:if test="count(xtm:topic/xtm:instanceOf) != 0 or count(xtm:association) != 0">]</xsl:if>
     <xsl:text>}&#xA;</xsl:text>
@@ -101,13 +101,32 @@
   </xsl:template>
   
   <!-- topic types -->
-  <xsl:template match="xtm:topic/xtm:instanceOf/xtm:topicRef">
+  <xsl:template match="xtm:topic/xtm:instanceOf">
     <xsl:text>{"type":"si:http://psi.topicmaps.org/iso13250/model/type-instance","roles":[{"type": "si:http://psi.topicmaps.org/iso13250/model/type","player":</xsl:text>
     <!-- type player -->
-    <xsl:apply-templates select="@href" mode="topic-ref"/>
+    <xsl:apply-templates select="xtm:topicRef|xtm:subjectIdentifierRef|xtm:subjectLocatorRef"/>
     <xsl:text>}, {"type":"si:http://psi.topicmaps.org/iso13250/model/instance","player":</xsl:text>
     <!-- instance player -->
-    <xsl:value-of select="concat('&quot;ii:#', ../../@id, '&quot;')"/>
+    <xsl:choose>
+        <xsl:when test="../xtm:subjectIdentifier">
+            <xsl:call-template name="string">
+                <xsl:with-param name="s" select="concat('si:', ../xtm:subjectIdentifier/@href)"/>
+            </xsl:call-template>
+        </xsl:when>
+        <xsl:when test="../xtm:subjectLocator">
+            <xsl:call-template name="string">
+                <xsl:with-param name="s" select="concat('sl:', ../xtm:subjectLocator/@href)"/>
+            </xsl:call-template>
+        </xsl:when>
+        <xsl:when test="../xtm:itemIdentity">
+            <xsl:call-template name="string">
+                <xsl:with-param name="s" select="concat('ii:', ../xtm:itemIdentity/@href)"/>
+            </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+            <xsl:value-of select="concat('&quot;ii:#', ../@id, '&quot;')"/>
+        </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>}]}</xsl:text>
     <xsl:if test="position() != last()">,</xsl:if>
   </xsl:template>
