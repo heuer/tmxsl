@@ -89,7 +89,8 @@
   </xsl:template>
 
   <xsl:template match="atom:uri">
-    <subjectLocator href="{.}"/>
+    <!--** Link to the author becomes a subject identifier -->
+    <subjectIdentifier href="{.}"/>
   </xsl:template>
 
   <xsl:template match="atom:link[@rel='alternate'][@type='text/html']">
@@ -127,6 +128,8 @@
   </xsl:template>
 
   <xsl:template match="atom:entry">
+    <!--** Translates atom:entry to a topic and 
+           creates an association between the entry and its author -->
     <topic>
       <xsl:apply-templates select="atom:id"/>
       <xsl:apply-templates select="atom:link"/>
