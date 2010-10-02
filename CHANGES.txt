@@ -4,6 +4,7 @@ Change log
 
 2010-xx-yy
 ----------
+- Atom 1.0 -> XTM 2.1 added
 - XTM 1.0 -> XTM 2.x: Fixed issue #3 (ambiguous rule match)
   reported by Patrick Durusau
 - XTM 2.x -> JTM 1.0: Fixed issues with the XTM 2.1 -> JTM 
