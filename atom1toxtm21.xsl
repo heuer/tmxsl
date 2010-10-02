@@ -70,7 +70,7 @@
     <!--** Translates atom:id into subject identifier
            
            Since atom:id may be a URN or any other non dereferencable IRI, 
-           it seems to be more approbiate than subject locator 
+           it seems to be more appropriate than subject locator 
     -->
     <subjectIdentifier href="{.}"/>
   </xsl:template>
