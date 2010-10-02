@@ -76,12 +76,12 @@
   </xsl:template>
 
   <xsl:template match="atom:title|atom:name">
-      <!--** Translates atom:title and atom:name into TM name -->
-      <name><value><xsl:value-of select="."/></value></name>
+    <!--** Translates atom:title and atom:name into TM name -->
+    <name><value><xsl:value-of select="."/></value></name>
   </xsl:template>
 
   <xsl:template match="atom:subtitle">
-      <!--** Translates atom:subtitle into TM name -->
+    <!--** Translates atom:subtitle into TM name -->
     <name>
       <type><subjectIdentifierRef href="http://purl.org/dc/terms/alternative"/></type>
       <value><xsl:value-of select="."/></value>
@@ -89,33 +89,33 @@
   </xsl:template>
 
   <xsl:template match="atom:uri">
-      <subjectLocator href="{.}"/>
+    <subjectLocator href="{.}"/>
   </xsl:template>
 
   <xsl:template match="atom:link[@rel='alternate'][@type='text/html']">
-      <!--** The link to the post becomes a subject locator -->
-      <subjectLocator href="{@href}"/>
+    <!--** The link to the post becomes a subject locator -->
+    <subjectLocator href="{@href}"/>
   </xsl:template>
 
   <xsl:template match="atom:email">
-      <!--** Translates atom:email into a subject identifier with a "mailto:" prefix -->
-      <subjectIdentifier href="{concat('mailto:', .)}"/>
+    <!--** Translates atom:email into a subject identifier with a "mailto:" prefix -->
+    <subjectIdentifier href="{concat('mailto:', .)}"/>
   </xsl:template>
 
   <xsl:template match="atom:updated">
-      <!--** atom:updated becomes an occurrence -->
-      <xsl:call-template name="datetime">
-        <xsl:with-param name="type" select="'http://purl.org/dc/terms/modified'"/>
-        <xsl:with-param name="date" select="."/>
-      </xsl:call-template>
+    <!--** atom:updated becomes an occurrence -->
+    <xsl:call-template name="datetime">
+      <xsl:with-param name="type" select="'http://purl.org/dc/terms/modified'"/>
+      <xsl:with-param name="date" select="."/>
+    </xsl:call-template>
   </xsl:template>
 
   <xsl:template match="atom:published">
-      <!--** atom:published becomes an occurrence -->
-      <xsl:call-template name="datetime">
-        <xsl:with-param name="type" select="'http://purl.org/dc/terms/date'"/>
-        <xsl:with-param name="date" select="."/>
-      </xsl:call-template>
+    <!--** atom:published becomes an occurrence -->
+    <xsl:call-template name="datetime">
+      <xsl:with-param name="type" select="'http://purl.org/dc/terms/date'"/>
+      <xsl:with-param name="date" select="."/>
+    </xsl:call-template>
   </xsl:template>
 
   <xsl:template match="atom:summary">
