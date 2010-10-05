@@ -42,9 +42,11 @@
 -->
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:dc="http://purl.org/dc/elements/1.1/"
                 xmlns="http://www.topicmaps.org/xtm/"
                 xmlns:str="http://exslt.org/strings"
-                extension-element-prefixes="str">
+                extension-element-prefixes="str"
+                 exclude-result-prefixes="dc">
 
   <xsl:import href="rssdates.xsl"/>
 
@@ -60,7 +62,7 @@
       </reifier>
       <topic>
         <subjectLocator href="{link}"/>
-        <xsl:apply-templates select="title|description|copyright|pubDate"/>
+        <xsl:apply-templates select="title|description|copyright|pubDate|dc:date|dc:rights"/>
       </topic>
       <xsl:apply-templates select="item"/>
     </topicMap>
@@ -70,7 +72,7 @@
     <!--** Converts RSS items into topics and connects each item with the item's author -->
     <topic>
       <xsl:apply-templates select="link|guid"/>
-      <xsl:apply-templates select="title|description|pubDate"/>
+      <xsl:apply-templates select="title|description|pubDate|dc:date"/>
     </topic>
     <xsl:apply-templates select="author"/>
   </xsl:template>
@@ -136,11 +138,19 @@
     </occurrence>
   </xsl:template>
 
-  <xsl:template match="copyright">
-    <!--** Converts RSS copyright into an occurrence -->
+  <xsl:template match="copyright|dc:rights">
+    <!--** Converts RSS copyright / dc:rights into an occurrence -->
     <occurrence>
       <type><subjectIdentifierRef href="http://purl.org/dc/elements/1.1/rights"/></type>
       <resourceData><xsl:value-of select="."/></resourceData>
+    </occurrence>
+  </xsl:template>
+
+  <xsl:template match="dc:date">
+    <!--** Converts dc:date into an occurrence -->
+    <occurrence>
+      <type><subjectIdentifierRef href="http://purl.org/dc/elements/1.1/date"/></type>
+      <resourceData datatype="http://www.w3.org/2001/XMLSchema#dateTime"><xsl:value-of select="."/></resourceData>
     </occurrence>
   </xsl:template>
 
