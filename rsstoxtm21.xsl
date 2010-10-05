@@ -120,7 +120,7 @@
            a unique string if I understood the RSS spec correctly. So, we're ignoring
            non-permalink guids
     -->
-    <xsl:if test="@isPermaLink">
+    <xsl:if test="@isPermaLink = 'true'">
       <subjectLocator href="{.}"/>
     </xsl:if>
   </xsl:template>
