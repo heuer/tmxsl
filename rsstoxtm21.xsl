@@ -7,6 +7,7 @@
   This stylesheet translates RSS into XTM 2.1.
 
   RSS: <http://www.rssboard.org/rss-specification>
+  RSS 1.0: <http://web.resource.org/rss/1.0/spec>
   XTM 2.1: <http://www.itscj.ipsj.or.jp/sc34/open/1378.htm>
 
   Copyright (c) 2010, Semagia - Lars Heuer <http://www.semagia.com/>
@@ -43,16 +44,41 @@
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:dc="http://purl.org/dc/elements/1.1/"
+                xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                xmlns:rss="http://purl.org/rss/1.0/"
                 xmlns="http://www.topicmaps.org/xtm/"
                 xmlns:str="http://exslt.org/strings"
                 extension-element-prefixes="str"
-                 exclude-result-prefixes="dc">
+                exclude-result-prefixes="dc rdf rss">
 
   <xsl:import href="rssdates.xsl"/>
 
-  <xsl:output method="xml" media-type="application/x-tm+xtm" encoding="utf-8" standalone="yes" indent="yes"/>
+  <xsl:output method="xml" media-type="application/x-tm+xtm" encoding="utf-8" standalone="yes"/>
 
   <xsl:strip-space elements="*"/>
+
+  <!-- RSS 1.0 -->
+
+  <xsl:template match="/rdf:RDF">
+    <!--** Matches RSS 1.0 -->
+    <topicMap version="2.1">
+      <xsl:apply-templates select="rss:channel"/>
+      <xsl:apply-templates select="rss:item"/>
+    </topicMap>
+  </xsl:template>
+
+  <xsl:template match="rss:channel">
+    <!--** Creates an reifier for the channel and converts each RSS item into a topic -->
+    <reifier>
+      <subjectLocatorRef href="{rss:link}"/>
+    </reifier>
+    <topic>
+      <subjectLocator href="{rss:link}"/>
+      <xsl:apply-templates select="rss:title|rss:description|dc:date|dc:rights"/>
+    </topic>
+  </xsl:template>
+
+  <!-- RSS 0.9x, 2.0 -->
 
   <xsl:template match="/rss/channel">
     <!--** Creates an reifier for the channel and converts each RSS item into a topic -->
@@ -68,13 +94,14 @@
     </topicMap>
   </xsl:template>
 
-  <xsl:template match="item[link]">
+  <xsl:template match="item[link]|rss:item">
     <!--** Converts RSS items into topics and connects each item with the item's author -->
     <topic>
-      <xsl:apply-templates select="link|guid"/>
-      <xsl:apply-templates select="title|description|pubDate|dc:date"/>
+      <xsl:apply-templates select="link|guid|rss:link"/>
+      <xsl:apply-templates select="title|rss:title|description|rss:description|pubDate|dc:date"/>
     </topic>
     <xsl:apply-templates select="author"/>
+    <xsl:apply-templates select="dc:relation"/>
   </xsl:template>
 
   <xsl:template match="author">
@@ -108,7 +135,22 @@
     </xsl:if>
   </xsl:template>
 
-  <xsl:template match="link">
+  <xsl:template match="dc:relation">
+    <!--** Converts dc:relation into an association -->
+    <association>
+      <type><subjectIdentifierRef href="http://purl.org/dc/elements/1.1/relation"/></type>
+      <role>
+        <type><subjectIdentifierRef href="http://psi.topicmaps.org/iso29111/resource"/></type>
+        <subjectLocatorRef href="{../link|../rss:link}"/>
+      </role>
+      <role>
+        <type><subjectIdentifierRef href="http://psi.topicmaps.org/iso29111/value"/></type>
+        <subjectLocatorRef href="{.}"/>
+      </role>
+    </association>
+  </xsl:template>
+
+  <xsl:template match="link|rss:link">
     <!--** Converts RSS link into a subject locator (within a topic context) -->
     <subjectLocator href="{.}"/>
   </xsl:template>
@@ -125,12 +167,12 @@
     </xsl:if>
   </xsl:template>
   
-  <xsl:template match="title">
+  <xsl:template match="title|rss:title">
     <!--** Converts RSS title into a name -->
     <name><value><xsl:value-of select="."/></value></name>
   </xsl:template>
 
-  <xsl:template match="description">
+  <xsl:template match="description|rss:description">
     <!--** Converts RSS description into an occurrence -->
     <occurrence>
       <type><subjectIdentifierRef href="http://purl.org/dc/terms/abstract"/></type>
