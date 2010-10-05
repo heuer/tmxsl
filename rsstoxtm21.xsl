@@ -60,7 +60,7 @@
       </reifier>
       <topic>
         <subjectLocator href="{link}"/>
-        <xsl:apply-templates select="title|description|copyright"/>
+        <xsl:apply-templates select="title|description|copyright|pubDate"/>
       </topic>
       <xsl:apply-templates select="item"/>
     </topicMap>
