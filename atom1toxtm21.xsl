@@ -43,9 +43,8 @@
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:atom="http://www.w3.org/2005/Atom"
-                xmlns:iso="http://psi.topicmaps.org/iso13250/model/"
                 xmlns="http://www.topicmaps.org/xtm/"
-                exclude-result-prefixes="atom iso">
+                exclude-result-prefixes="atom">
 
   <xsl:output method="xml" media-type="application/x-tm+xtm" encoding="utf-8" standalone="yes"/>
 
