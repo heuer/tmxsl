@@ -98,8 +98,9 @@
     <!--** Converts RSS items into topics and connects each item with the item's author -->
     <topic>
       <xsl:apply-templates select="link|guid|rss:link"/>
-      <xsl:apply-templates select="title|rss:title|description|rss:description|pubDate|dc:date"/>
+      <xsl:apply-templates select="title|rss:title|description|rss:description|pubDate|dc:date|dc:creator"/>
     </topic>
+    <!-- Associations -->
     <xsl:apply-templates select="author"/>
     <xsl:apply-templates select="dc:relation"/>
   </xsl:template>
@@ -184,6 +185,14 @@
     <!--** Converts RSS copyright / dc:rights into an occurrence -->
     <occurrence>
       <type><subjectIdentifierRef href="http://purl.org/dc/elements/1.1/rights"/></type>
+      <resourceData><xsl:value-of select="."/></resourceData>
+    </occurrence>
+  </xsl:template>
+
+  <xsl:template match="dc:creator">
+    <!--** Converts dc:creator into an occurrence -->
+    <occurrence>
+      <type><subjectIdentifierRef href="http://purl.org/dc/elements/1.1/creator"/></type>
       <resourceData><xsl:value-of select="."/></resourceData>
     </occurrence>
   </xsl:template>
