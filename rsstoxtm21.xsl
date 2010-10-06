@@ -98,10 +98,11 @@
     <!--** Converts RSS items into topics and connects each item with the item's author -->
     <topic>
       <xsl:apply-templates select="link|guid|rss:link"/>
-      <xsl:apply-templates select="title|rss:title|description|rss:description|pubDate|dc:date|dc:creator"/>
+      <xsl:apply-templates select="title|rss:title|description|rss:description|pubDate|dc:date"/>
     </topic>
     <!-- Associations -->
     <xsl:apply-templates select="author"/>
+    <xsl:apply-templates select="dc:creator"/>
     <xsl:apply-templates select="dc:relation"/>
   </xsl:template>
 
@@ -190,11 +191,27 @@
   </xsl:template>
 
   <xsl:template match="dc:creator">
-    <!--** Converts dc:creator into an occurrence -->
-    <occurrence>
-      <type><subjectIdentifierRef href="http://purl.org/dc/elements/1.1/creator"/></type>
-      <resourceData><xsl:value-of select="."/></resourceData>
-    </occurrence>
+    <!--** Converts dc:creator into an association which connects the item with the author 
+           
+           Since dc:creator is almost always a string, a topic (with an item identifier) 
+           is created for the dc:creator.
+    -->
+    <association>
+      <type><subjectIdentifierRef href="http://purl.org/dc/terms/creator"/></type>
+      <!--@ The item plays the "resource" role -->
+      <role>
+        <type><subjectIdentifierRef href="http://psi.topicmaps.org/iso29111/resource"/></type>
+        <subjectLocatorRef href="{../link|../rss:link}"/>
+      </role>
+      <!--@ dc:creator plays the "value" role -->
+      <role>
+        <type><subjectIdentifierRef href="http://psi.topicmaps.org/iso29111/value"/></type>
+        <topicRef href="#{generate-id(.)}"/>
+      </role>
+    </association>
+    <topic id="{generate-id(.)}">
+      <name><value><xsl:value-of select="."/></value></name>
+    </topic>
   </xsl:template>
 
   <xsl:template match="dc:date">
