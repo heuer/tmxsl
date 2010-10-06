@@ -4,6 +4,7 @@ Change log
 
 2010-xx-yy
 ----------
+- RSS 0.9 - 2.0 -> XTM 2.1 added
 - Atom 1.0 -> XTM 2.1 added
 - XTM 1.0 -> XTM 2.x: Fixed issue #3 (ambiguous rule match)
   reported by Patrick Durusau
