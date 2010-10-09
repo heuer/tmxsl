@@ -46,7 +46,7 @@
                 xmlns="http://www.topicmaps.org/xtm/"
                 exclude-result-prefixes="atom">
 
-  <xsl:output method="xml" media-type="application/x-tm+xtm" encoding="utf-8" standalone="yes"/>
+  <xsl:output method="xml" media-type="application/x-tm+xtm" encoding="utf-8" standalone="yes" indent="yes"/>
 
   <xsl:strip-space elements="*"/>
 
@@ -57,6 +57,7 @@
       </reifier>
       <topic>
         <xsl:apply-templates select="atom:id"/>
+        <xsl:apply-templates select="atom:link"/>
         <xsl:apply-templates select="atom:title|atom:subtitle|atom:updated"/>
       </topic>
       <xsl:apply-templates select="atom:author"/>
@@ -94,6 +95,11 @@
 
   <xsl:template match="atom:link[@rel='alternate'][@type='text/html']">
     <!--** The link to the post becomes a subject locator -->
+    <subjectLocator href="{@href}"/>
+  </xsl:template>
+
+  <xsl:template match="atom:link[@rel='self'][@type='application/atom+xml']">
+    <!--** The "self" link (which points to the feed) becomes a subject locator -->
     <subjectLocator href="{@href}"/>
   </xsl:template>
 
