@@ -3,11 +3,11 @@
   XTM 2 -> JTM 1.0 conversion stylesheet
   ======================================
   
-  This stylesheet translates XTM 2 into JSON Topic Maps (JTM) 1.0.
+  This stylesheet translates XTM 2.0 and 2.1 into JSON Topic Maps (JTM) 1.0 and 1.1.
 
   XTM 2.0: <http://www.isotopicmaps.org/sam/sam-xtm/2006-06-19/>
-  JTM 1.0: <http://www.cerny-online.com/jtm/>
-
+  JTM 1.0: <http://www.cerny-online.com/jtm/1.0/>
+  JTM 1.1: <http://www.cerny-online.com/jtm/1.1/>
 
 
   Copyright (c) 2009, Semagia - Lars Heuer <http://www.semagia.com/>
@@ -50,27 +50,35 @@
 
   <xsl:strip-space elements="*"/>
 
+  <xsl:param name="jtm_version" select="'1.0'"/>
+
   <xsl:template match="xtm:topicMap">
-    <xsl:text>{"version":"1.0","item_type":"topicmap",</xsl:text>
+    <xsl:if test="$jtm_version != '1.0' and $jtm_version != '1.1'">
+      <xsl:message terminate="yes">Unsupported JTM version. Expected '1.0' or '1.1'</xsl:message>
+    </xsl:if>
+    <xsl:text>{"version":"</xsl:text><xsl:value-of select="$jtm_version"/><xsl:text>","item_type":"topicmap",</xsl:text>
     <xsl:call-template name="reifier"/>
     <xsl:apply-templates select="xtm:itemIdentity"/>
     <xsl:apply-templates select="xtm:topic"/>
     <xsl:apply-templates select="xtm:association"/>
-    <xsl:if test="count(xtm:topic/xtm:instanceOf) != 0">
+    <xsl:variable name="process_isa" select="$jtm_version = '1.0' and count(xtm:topic/xtm:instanceOf) != 0"/>
+    <xsl:if test="$process_isa">
       <xsl:choose>
         <xsl:when test="count(xtm:association) = 0">,"associations":[</xsl:when>
         <xsl:otherwise>,</xsl:otherwise>
       </xsl:choose>
-      <xsl:apply-templates select="xtm:topic/xtm:instanceOf"/>
+      <xsl:apply-templates select="xtm:topic/xtm:instanceOf" mode="jtm10"/>
     </xsl:if>
-    <xsl:if test="count(xtm:topic/xtm:instanceOf) != 0 or count(xtm:association) != 0">]</xsl:if>
+    <xsl:if test="$process_isa or count(xtm:association) != 0">]</xsl:if>
     <xsl:text>}&#xA;</xsl:text>
   </xsl:template>
 
-  <!-- topics -->
   <xsl:template match="xtm:topic">
+    <!--** Translates xtm:topic into a JSON object. If it's the first topic, an "topics" array is created -->
     <xsl:choose>
+      <!--@ First topic? Create a "topics" array -->
       <xsl:when test="position() = 1">,"topics":[</xsl:when>
+      <!--@ Not the first topic, add the topic to the array -->
       <xsl:otherwise>,</xsl:otherwise>
     </xsl:choose>
     <xsl:text>{"item_identifiers":[</xsl:text>
@@ -94,20 +102,27 @@
     <xsl:text>]</xsl:text>
     <xsl:apply-templates select="xtm:subjectIdentifier"/>
     <xsl:apply-templates select="xtm:subjectLocator"/>
+    <xsl:if test="$jtm_version = '1.1'">
+      <xsl:apply-templates select="xtm:instanceOf" mode="jtm11"/>
+    </xsl:if>
     <xsl:apply-templates select="xtm:name"/>
     <xsl:apply-templates select="xtm:occurrence"/>
     <xsl:text>}</xsl:text>
+    <!--@ Last topic? Finish the array -->
     <xsl:if test="position() = last()">]</xsl:if>
   </xsl:template>
+
+  <xsl:template match="xtm:instanceOf" mode="jtm11">
+    <!--** Creates an "instance_of" array in JTM 1.1 -->
+    <xsl:if test="position() = 1">,"instance_of":[</xsl:if>
+    <xsl:apply-templates/>
+    <xsl:text>]</xsl:text>
+  </xsl:template>
   
-  <!-- topic types -->
-  <xsl:template match="xtm:topic/xtm:instanceOf">
-    <xsl:text>{"type":"si:http://psi.topicmaps.org/iso13250/model/type-instance","roles":[{"type": "si:http://psi.topicmaps.org/iso13250/model/type","player":</xsl:text>
-    <!-- type player -->
-    <xsl:apply-templates select="xtm:topicRef|xtm:subjectIdentifierRef|xtm:subjectLocatorRef"/>
-    <xsl:text>}, {"type":"si:http://psi.topicmaps.org/iso13250/model/instance","player":</xsl:text>
-    <!-- instance player -->
-    <xsl:choose>
+  <xsl:template match="xtm:topic/xtm:instanceOf" mode="jtm10">
+    <!--** Converts xtm:instanceOf into associations (JTM 1.0) -->
+    <xsl:variable name="instance_player">
+      <xsl:choose>
         <xsl:when test="../xtm:subjectIdentifier">
             <xsl:call-template name="string">
                 <xsl:with-param name="s" select="concat('si:', ../xtm:subjectIdentifier/@href)"/>
@@ -126,35 +141,25 @@
         <xsl:otherwise>
             <xsl:value-of select="concat('&quot;ii:#', ../@id, '&quot;')"/>
         </xsl:otherwise>
-    </xsl:choose>
-    <xsl:text>}]}</xsl:text>
-    <xsl:if test="position() != last()">,</xsl:if>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:for-each select="xtm:*">
+      <xsl:text>{"type":"si:http://psi.topicmaps.org/iso13250/model/type-instance","roles":[{"type": "si:http://psi.topicmaps.org/iso13250/model/instance","player":</xsl:text><xsl:value-of select="$instance_player"/><xsl:text>},{"type":"si:http://psi.topicmaps.org/iso13250/model/type","player":</xsl:text>
+      <xsl:apply-templates select="."/>
+      <xsl:text>}]}</xsl:text>
+      <xsl:if test="position() != last()">,</xsl:if>
+    </xsl:for-each>
   </xsl:template>
 
-  <!-- iids != topic iids -->
-  <xsl:template match="xtm:itemIdentity">
-    <xsl:if test="position() = 1">,"item_identifiers":</xsl:if>
-    <xsl:text>[</xsl:text>
-    <xsl:apply-templates select="@href" mode="iri"/>
-    <xsl:choose>
-      <xsl:when test="position() = last()">]</xsl:when>
-      <xsl:otherwise>,</xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-
-  <!-- sids -->
-  <xsl:template match="xtm:subjectIdentifier">
-    <xsl:if test="position() = 1">,"subject_identifiers":[</xsl:if>
-    <xsl:apply-templates select="@href" mode="iri"/>
-    <xsl:choose>
-      <xsl:when test="position() = last()">]</xsl:when>
-      <xsl:otherwise>,</xsl:otherwise>
-    </xsl:choose>
-  </xsl:template>
-
-  <!-- slos -->
-  <xsl:template match="xtm:subjectLocator">
-    <xsl:if test="position() = 1">,"subject_locators":[</xsl:if>
+  <xsl:template match="xtm:itemIdentity|xtm:subjectIdentifier|xtm:subjectLocator">
+    <!--** Translates item identifiers != topic iids, subject identifiers and subject locators into a JSON array -->
+    <xsl:if test="position() = 1">
+      <xsl:choose>
+        <xsl:when test="local-name(.) = 'subjectIdentifier'">,"subject_identifiers":[</xsl:when>
+        <xsl:when test="local-name(.) = 'subjectLocator'">,"subject_locators":[</xsl:when>
+        <xsl:otherwise>,"item_identifiers":[</xsl:otherwise>
+      </xsl:choose>
+    </xsl:if>
     <xsl:apply-templates select="@href" mode="iri"/>
     <xsl:choose>
       <xsl:when test="position() = last()">]</xsl:when>
@@ -191,30 +196,19 @@
     <xsl:if test="position() = last() and local-name(.) != 'association'">]</xsl:if>
   </xsl:template>
 
-  <xsl:template match="xtm:topicRef">
+  <xsl:template match="xtm:topicRef|xtm:subjectIdentifierRef|xtm:subjectLocatorRef">
     <xsl:if test="parent::xtm:role">
       <xsl:text>,"player":</xsl:text>
     </xsl:if>
-    <xsl:apply-templates select="@href" mode="topic-ref"/>
-    <xsl:if test="position() != last()"><xsl:text>,</xsl:text></xsl:if>
-  </xsl:template>
-
-  <xsl:template match="xtm:subjectIdentifierRef">
-    <xsl:if test="parent::xtm:role">
-      <xsl:text>,"player":</xsl:text>
-    </xsl:if>
+    <xsl:variable name="prefix">
+      <xsl:choose>
+        <xsl:when test="local-name(.) = 'subjectIdentifierRef'"><xsl:value-of select="'si'"/></xsl:when>
+        <xsl:when test="local-name(.) = 'subjectLocatorRef'"><xsl:value-of select="'sl'"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="'ii'"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
     <xsl:call-template name="string">
-      <xsl:with-param name="s" select="concat('si:', @href)"/>
-    </xsl:call-template>
-    <xsl:if test="position() != last()"><xsl:text>,</xsl:text></xsl:if>
-  </xsl:template>
-
-  <xsl:template match="xtm:subjectLocatorRef">
-    <xsl:if test="parent::xtm:role">
-      <xsl:text>,"player":</xsl:text>
-    </xsl:if>
-    <xsl:call-template name="string">
-      <xsl:with-param name="s" select="concat('sl:', @href)"/>
+      <xsl:with-param name="s" select="concat($prefix, ':', @href)"/>
     </xsl:call-template>
     <xsl:if test="position() != last()"><xsl:text>,</xsl:text></xsl:if>
   </xsl:template>
@@ -222,20 +216,25 @@
   <xsl:template match="xtm:value|xtm:type|xtm:scope">
     <xsl:value-of select="concat(',&quot;', local-name(.), '&quot;:')"/>
     <xsl:if test="local-name(.) = 'scope'">[</xsl:if>
-    <xsl:apply-templates select="xtm:topicRef|xtm:subjectIdentifierRef|xtm:subjectLocatorRef|text()"/>
+    <xsl:apply-templates/>
     <xsl:if test="local-name(.) = 'scope'">]</xsl:if>
   </xsl:template>
 
-  <!-- xsd:anyURI -->
   <xsl:template match="xtm:resourceRef|xtm:resourceData[@datatype = 'http://www.w3.org/2001/XMLSchema#anyURI']">
-    <xsl:text>,"datatype": "http://www.w3.org/2001/XMLSchema#anyURI","value":</xsl:text>
+    <!--** Translates xtm:resourceData and xtm:resourceRef into "value":"...". The datatype is set to xsd:anyURI  -->
+    <xsl:text>,"datatype":</xsl:text>
+    <xsl:choose>
+      <xsl:when test="$jtm_version = '1.1'">"[xsd:anyURI]"</xsl:when>
+      <xsl:otherwise>"http://www.w3.org/2001/XMLSchema#anyURI"</xsl:otherwise>
+    </xsl:choose>
+    <xsl:text>,"value":</xsl:text>
     <xsl:call-template name="string">
       <xsl:with-param name="s" select="@href|text()"/>
     </xsl:call-template>
   </xsl:template>
 
-  <!-- xsd:string -->
   <xsl:template match="xtm:resourceData[not(@datatype) or @datatype = 'http://www.w3.org/2001/XMLSchema#string']">
+    <!--** Translates xtm:resourceData into "value":"...". The datatype is omitted  -->
     <xsl:text>,"value":</xsl:text>
     <xsl:choose>
       <xsl:when test="not(text())">""</xsl:when>
@@ -243,12 +242,19 @@
     </xsl:choose>
   </xsl:template>
 
-  <!-- everything != xsd:string / xsd:anyURI-->
   <xsl:template match="xtm:resourceData[@datatype]">
+    <!--** Translates xtm:resourceData into a value / datatype pair -->
     <xsl:text>,"datatype":</xsl:text>
-    <xsl:call-template name="string">
-      <xsl:with-param name="s" select="@datatype"/>
-    </xsl:call-template>
+    <xsl:choose>
+      <xsl:when test="$jtm_version = '1.1' and starts-with(@datatype, 'http://www.w3.org/2001/XMLSchema#')">
+        <xsl:text>"[xsd:</xsl:text><xsl:value-of select="substring-after(@datatype, 'http://www.w3.org/2001/XMLSchema#')"/><xsl:text>]"</xsl:text>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="string">
+          <xsl:with-param name="s" select="@datatype"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:text>,"value":</xsl:text>
     <xsl:apply-templates select="text()"/>
   </xsl:template>
@@ -261,6 +267,9 @@
     <xsl:choose>
       <xsl:when test="@reifier">
         <xsl:apply-templates select="@reifier" mode="topic-ref"/>
+      </xsl:when>
+      <xsl:when test="xtm:reifier">
+          <xsl:apply-templates select="xtm:reifier/xtm:*"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:text>null</xsl:text>
