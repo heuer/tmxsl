@@ -11,6 +11,7 @@ Change log
 - XTM 2.x -> JTM 1.0: Fixed issues with the XTM 2.1 -> JTM 
   translation (subjectIdentifierRef / subjectLocatorRef was not
   recognized as role player)
+* XTM 2.x -> JTM 1.1 support added
 
 
 2009-10-19
