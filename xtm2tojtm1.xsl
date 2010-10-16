@@ -51,12 +51,17 @@
   <xsl:strip-space elements="*"/>
 
   <xsl:param name="jtm_version" select="'1.0'"/>
+  <xsl:param name="default_uri" select="''"/>
 
   <xsl:template match="xtm:topicMap">
     <xsl:if test="$jtm_version != '1.0' and $jtm_version != '1.1'">
       <xsl:message terminate="yes">Unsupported JTM version. Expected '1.0' or '1.1'</xsl:message>
     </xsl:if>
-    <xsl:text>{"version":"</xsl:text><xsl:value-of select="$jtm_version"/><xsl:text>","item_type":"topicmap",</xsl:text>
+    <xsl:text>{"version":"</xsl:text><xsl:value-of select="$jtm_version"/><xsl:text>",</xsl:text>
+    <xsl:if test="$jtm_version = '1.1' and $default_uri != ''">
+      <xsl:text>"prefixes":{"__":"</xsl:text><xsl:value-of select="$default_uri"/><xsl:text>"},</xsl:text>
+    </xsl:if>
+    <xsl:text>"item_type":"topicmap",</xsl:text>
     <xsl:call-template name="reifier"/>
     <xsl:apply-templates select="xtm:itemIdentity"/>
     <xsl:apply-templates select="xtm:topic"/>
@@ -168,9 +173,18 @@
   </xsl:template>
 
   <xsl:template match="@href" mode="iri">
-    <xsl:call-template name="string">
-      <xsl:with-param name="s" select="."/>
-    </xsl:call-template>
+    <xsl:choose>
+      <xsl:when test="$jtm_version != '1.0' and $default_uri != '' and starts-with(., $default_uri)">
+        <xsl:call-template name="string">
+          <xsl:with-param name="s" select="concat('[__:', substring-after(., $default_uri), ']')"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="string">
+          <xsl:with-param name="s" select="."/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="@href|@reifier" mode="topic-ref">
@@ -207,9 +221,18 @@
         <xsl:otherwise><xsl:value-of select="'ii'"/></xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
-    <xsl:call-template name="string">
-      <xsl:with-param name="s" select="concat($prefix, ':', @href)"/>
-    </xsl:call-template>
+    <xsl:choose>
+      <xsl:when test="$jtm_version != '1.0' and $default_uri != '' and starts-with(@href, $default_uri)">
+        <xsl:call-template name="string">
+          <xsl:with-param name="s" select="concat($prefix, ':', '[__:', substring-after(@href, $default_uri), ']')"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="string">
+          <xsl:with-param name="s" select="concat($prefix, ':', @href)"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
     <xsl:if test="position() != last()"><xsl:text>,</xsl:text></xsl:if>
   </xsl:template>
 
