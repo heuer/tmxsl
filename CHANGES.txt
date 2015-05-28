@@ -2,20 +2,27 @@
 Change log
 ==========
 
-2010-xx-yy
-----------
+0.1.1 - 2015-mm-dd
+------------------
 - RSS 0.9 - 2.0 -> XTM 2.1 added
 - Atom 1.0 -> XTM 2.1 added
 - XTM 1.0 -> XTM 2.x: Fixed issue #3 (ambiguous rule match)
-  reported by Patrick Durusau
+  reported by Patrick Durusau:
+  *****
+  Matches both "xtm:subjectIdentity/xtm:resourceRef" on line 306 of tm-converter-0.1.0/xtm1toxtm2.xsl and
+  "xtm:resourceRef[local-name(..) != 'occurrence'][local-name(..) != 'variantName']" on line 132 of tm-converter-0.1.0/xtm1toxtm2.xsl
+  Recoverable error
+  Ambiguous rule match for 
+  /topicMap[1]/topic[21]/subjectIdentity[1]/resourceRef[1]
+  *****
 - XTM 2.x -> JTM 1.0: Fixed issues with the XTM 2.1 -> JTM 
   translation (subjectIdentifierRef / subjectLocatorRef was not
   recognized as role player)
-* XTM 2.x -> JTM 1.1 support added
+- XTM 2.x -> JTM 1.1 support added
 
 
-2009-10-19
-----------
+0.1.0 - 2009-10-19
+------------------
 - XTM 1.0 -> CTM 1.0
 - XTM 1.0 -> XTM 2.0 / XTM 2.1
 - XTM 2.0 / XTM 2.1 -> CTM 1.0
