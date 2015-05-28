@@ -9,6 +9,9 @@ Currently supported:
 * OpenDocument Metadata -> TM/XML (experimental)
 
 
+License: BSD
+
+
 Other stylesheet sources:
 * TM/XML 1.0 -> XTM 1.0
   <http://www.ontopia.net/topicmaps/tmxml.html>
